@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="km">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ផែនទីអន្តរកម្មបឹងទន្លេសាប" />
+    <title>បឹងទន្លេសាប · Tonlé Sap Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <main class="map-app">
+      <div id="map" aria-label="ផែនទីបឹងទន្លេសាប"></div>
+
+      <aside class="search-panel" aria-label="ស្វែងរកទីតាំងនៅបឹងទន្លេសាប">
+        <header>
+          <h1>បឹងទន្លេសាប</h1>
+          <p>Tonlé Sap Map</p>
+        </header>
+        <div class="search-wrap">
+          <label class="sr-only" for="location-search">ស្វែងរកទីតាំង</label>
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" /></svg>
+          <input id="location-search" type="search" autocomplete="off" placeholder="ស្វែងរកទីតាំង..." />
+          <button id="clear-search" class="clear-search" type="button" aria-label="លុបការស្វែងរក" hidden>×</button>
+        </div>
+        <section class="important-areas" aria-labelledby="locations-heading">
+          <div class="locations-heading" id="locations-heading">ទីតាំងសំខាន់ៗ <small>Important Areas</small></div>
+          <div id="location-results" class="location-results" aria-live="polite"></div>
+        </section>
+      </aside>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/locations.js"></script>
+    <script src="js/map.js"></script>
+  </body>
+</html>
