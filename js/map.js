@@ -1,182 +1,370 @@
-/* global L, areas */
+/* global L, coreAreas, targetCommunes, provinces */
 (function () {
   "use strict";
 
-  const lakeBounds = L.latLngBounds([12.18, 103.68], [13.45, 104.78]);
-  const dragBounds = L.latLngBounds([11.98, 103.35], [13.67, 105.05]);
-  const markerStyle = { radius: 6, weight: 2, color: "#ffffff", fillColor: "#1f8a70", fillOpacity: 1 };
+  // Coordinates bounding the Tonlé Sap lake basin
+  const lakeBounds = L.latLngBounds([12.20, 103.40], [13.45, 104.90]);
+  const dragBounds = L.latLngBounds([11.80, 103.10], [13.75, 105.20]);
 
   let map;
-  let selectedAreaId = null;
-  let activeBoundaryLayer = null;
-  const geoJsonCache = new Map();
-  const markers = new Map();
-  const searchInput = document.getElementById("location-search");
-  const clearSearchButton = document.getElementById("clear-search");
-  const resultsElement = document.getElementById("location-results");
+  let currentMode = "coreAreas"; // 'coreAreas' | 'communes' | 'provinces'
+  let selectedItemId = null;
 
-  function initializeMap() {
+  const markers = new Map();
+  const coreBoundaries = new Map();
+  const geoJsonCache = new Map();
+
+  // DOM Elements
+  const btnResetLake = document.getElementById("btn-reset-lake");
+  const tabCore = document.getElementById("tab-core");
+  const tabCommunes = document.getElementById("tab-communes");
+  const tabProvinces = document.getElementById("tab-provinces");
+  const drawerCategoryTitle = document.getElementById("drawer-category-title");
+  const drawerList = document.getElementById("drawer-list");
+  const drawerDetail = document.getElementById("drawer-detail");
+  const btnCloseDetail = document.getElementById("btn-close-detail");
+  const btnDetailBack = document.getElementById("btn-detail-back");
+
+  // Detail Card Elements
+  const detailBadge = document.getElementById("detail-badge");
+  const detailTitleEn = document.getElementById("detail-title-en");
+  const detailTitleKh = document.getElementById("detail-title-kh");
+  const detailHighlight = document.getElementById("detail-highlight");
+  const detailStats = document.getElementById("detail-stats");
+  const detailDesc = document.getElementById("detail-desc");
+
+  function initMap() {
     map = L.map("map", {
-      zoomControl: false,
+      zoomControl: true,
       scrollWheelZoom: true,
       maxBounds: dragBounds,
-      maxBoundsViscosity: 1,
-      minZoom: 10,
-      maxZoom: 15
+      maxBoundsViscosity: 0.9,
+      minZoom: 9,
+      maxZoom: 16
     });
+
+    // Clean, readable OpenStreetMap tiles
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors"
+      attribution: "&copy; <a href='https://openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
     }).addTo(map);
-    map.fitBounds(lakeBounds, { padding: [20, 20] });
+
+    // Initial positioning to show the whole lake
+    resetWholeLakeView();
   }
 
-  function normalizeSearchText(value) {
-    return (value || "")
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, " ");
-  }
+  function resetWholeLakeView() {
+    selectedItemId = null;
+    hideDetailView();
+    updateMarkersHighlight();
+    resetCoreBoundariesStyle();
 
-  function matchesArea(area, query) {
-    const q = normalizeSearchText(query);
-    const values = [
-      area.nameKh,
-      area.nameEn,
-      ...(area.aliasesKh || []),
-      ...(area.aliasesEn || [])
-    ];
-    return values.some((value) => normalizeSearchText(value).includes(q));
-  }
-
-  function filterAreas() {
-    const query = searchInput.value;
-    return query.trim() ? areas.filter((area) => matchesArea(area, query)) : areas;
-  }
-
-  function areaPopup(area) {
-    return `<div class="popup-kh">${area.nameKh}</div>${area.nameEn ? `<div class="popup-en">${area.nameEn}</div>` : ""}`;
-  }
-
-  function createAreaMarkers() {
-    areas.forEach((area) => {
-      const marker = L.circleMarker([area.lat, area.lng], markerStyle)
-        .bindPopup(areaPopup(area), { className: "location-popup" });
-      marker.on("click", () => selectArea(area));
-      marker.addTo(map);
-      markers.set(area.id, marker);
+    const isMobile = window.innerWidth <= 860;
+    map.fitBounds(lakeBounds, {
+      paddingTopLeft: isMobile ? [10, 120] : [430, 20],
+      paddingBottomRight: isMobile ? [10, 260] : [20, 20]
     });
   }
 
-  function highlightSelectedArea() {
-    markers.forEach((marker, id) => {
-      const isSelected = id === selectedAreaId;
-      marker.setStyle({
-        weight: isSelected ? 3 : markerStyle.weight,
-        fillColor: isSelected ? "#0f766e" : markerStyle.fillColor,
-        color: markerStyle.color
-      });
-      marker.setRadius(isSelected ? 10 : markerStyle.radius);
-      if (isSelected) marker.bringToFront();
-    });
-  }
-
-  function clearActiveBoundary() {
-    if (activeBoundaryLayer) {
-      map.removeLayer(activeBoundaryLayer);
-      activeBoundaryLayer = null;
-    }
-  }
-
-  async function showAreaBoundary(area) {
-    clearActiveBoundary();
-
-    if (!area.geoJsonFile) {
-      map.flyTo([area.lat, area.lng], 12);
-      return;
-    }
-
-    try {
-      let geojson = geoJsonCache.get(area.geoJsonFile);
-      if (!geojson) {
-        const response = await fetch(area.geoJsonFile);
-        geojson = await response.json();
-        geoJsonCache.set(area.geoJsonFile, geojson);
-      }
-
-      if (selectedAreaId !== area.id) return;
-
-      activeBoundaryLayer = L.geoJSON(geojson, {
-        style: {
-          color: "#087f73",
-          weight: 3,
-          fillColor: "#18a999",
-          fillOpacity: 0.14
+  // Load and pre-render all 3 Core Area boundaries on the lake
+  async function loadCoreBoundaries() {
+    for (const area of coreAreas) {
+      if (!area.geoJsonFile) continue;
+      try {
+        let geojson = geoJsonCache.get(area.geoJsonFile);
+        if (!geojson) {
+          const res = await fetch(area.geoJsonFile);
+          geojson = await res.json();
+          geoJsonCache.set(area.geoJsonFile, geojson);
         }
-      }).addTo(map);
 
-      activeBoundaryLayer.bringToBack();
+        const layer = L.geoJSON(geojson, {
+          style: getBoundaryStyle(area.id === selectedItemId)
+        }).addTo(map);
 
-      map.fitBounds(activeBoundaryLayer.getBounds(), {
-        padding: [50, 50]
-      });
-    } catch (err) {
-      console.error("Could not load boundary GeoJSON:", err);
-      map.flyTo([area.lat, area.lng], 12);
+        layer.bringToBack();
+        layer.on("click", () => selectItem(area, "coreAreas"));
+        coreBoundaries.set(area.id, layer);
+      } catch (err) {
+        console.error("Could not load boundary for:", area.nameEn, err);
+      }
     }
   }
 
-  function renderAreaList() {
-    const results = filterAreas();
-    const hasQuery = Boolean(searchInput.value.trim());
-    clearSearchButton.hidden = !hasQuery;
+  function getBoundaryStyle(isSelected) {
+    if (isSelected) {
+      return {
+        color: "#087f73",
+        weight: 3.5,
+        dashArray: null,
+        fillColor: "#18a999",
+        fillOpacity: 0.22
+      };
+    }
+    return {
+      color: "#0f766e",
+      weight: 2,
+      dashArray: "6, 6",
+      fillColor: "#14b8a6",
+      fillOpacity: 0.08
+    };
+  }
 
-    if (!results.length) {
-      resultsElement.innerHTML = '<p class="empty-results">រកមិនឃើញទីតាំង<br><span>No location found</span></p>';
-      return;
+  function resetCoreBoundariesStyle() {
+    coreBoundaries.forEach((layer, id) => {
+      layer.setStyle(getBoundaryStyle(id === selectedItemId));
+    });
+  }
+
+  function createMarkerIcon(item, mode) {
+    let emoji = "🌿";
+    let pinClass = "core-pin";
+
+    if (mode === "communes") {
+      emoji = "📍";
+      pinClass = "commune-pin";
+    } else if (mode === "provinces") {
+      emoji = "🏛️";
+      pinClass = "province-pin";
     }
 
-    resultsElement.innerHTML = results.map((area) => `
-      <button class="location-card" type="button" data-area-id="${area.id}">
-        <span class="card-marker"></span>
-        <span>
-          <span class="card-name-kh">${area.nameKh}</span>
-          ${area.nameEn ? `<span class="card-name-en">${area.nameEn}</span>` : ""}
-        </span>
-      </button>`).join("");
+    return L.divIcon({
+      className: `custom-pin ${pinClass}`,
+      html: `<span>${emoji}</span>`,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+      popupAnchor: [0, -20]
+    });
+  }
 
-    resultsElement.querySelectorAll("[data-area-id]").forEach((button) => {
-      button.addEventListener("click", () => {
-        const area = areas.find((item) => item.id === button.dataset.areaId);
-        selectArea(area);
+  function renderModeMarkers(mode) {
+    // Clear existing markers from map
+    markers.forEach((marker) => map.removeLayer(marker));
+    markers.clear();
+
+    const data = getActiveData(mode);
+
+    data.forEach((item) => {
+      const icon = createMarkerIcon(item, mode);
+      const marker = L.marker([item.lat, item.lng], { icon })
+        .bindPopup(createPopupHtml(item), { className: "donor-popup-wrapper", closeButton: false });
+
+      marker.on("click", () => selectItem(item, mode));
+      marker.addTo(map);
+      markers.set(item.id, marker);
+    });
+
+    updateMarkersHighlight();
+  }
+
+  function createPopupHtml(item) {
+    let statHtml = "";
+    if (item.stats && item.stats.length > 0) {
+      statHtml = `<div class="popup-metric">${item.stats[0].label}: ${item.stats[0].value}</div>`;
+    } else if (item.targetCommunesCount) {
+      statHtml = `<div class="popup-metric">${item.targetCommunesCount} Target Communes</div>`;
+    }
+
+    return `
+      <div class="donor-popup">
+        <div class="popup-title-en">${item.nameEn}</div>
+        <div class="popup-title-kh">${item.nameKh}</div>
+        ${statHtml}
+      </div>
+    `;
+  }
+
+  function updateMarkersHighlight() {
+    markers.forEach((marker, id) => {
+      const el = marker.getElement();
+      if (!el) return;
+      if (id === selectedItemId) {
+        el.classList.add("selected");
+        marker.setZIndexOffset(1000);
+      } else {
+        el.classList.remove("selected");
+        marker.setZIndexOffset(0);
+      }
+    });
+  }
+
+  function getActiveData(mode) {
+    if (mode === "coreAreas") return coreAreas;
+    if (mode === "communes") return targetCommunes;
+    if (mode === "provinces") return provinces;
+    return coreAreas;
+  }
+
+  function updateCategoryHeaders(mode) {
+    if (mode === "coreAreas") {
+      drawerCategoryTitle.innerHTML = `
+        <h2>3 Core Conservation Areas</h2>
+        <p>UNESCO Biosphere Reserves & Ramsar Protected Wetlands</p>
+      `;
+    } else if (mode === "communes") {
+      drawerCategoryTitle.innerHTML = `
+        <h2>12 Target Communes</h2>
+        <p>Community Fisheries (CFi) Across 5 Provinces</p>
+      `;
+    } else if (mode === "provinces") {
+      drawerCategoryTitle.innerHTML = `
+        <h2>5 Surrounding Provinces</h2>
+        <p>The Provinces Bordering the Tonlé Sap Great Lake</p>
+      `;
+    }
+  }
+
+  function renderDrawerList(mode) {
+    const data = getActiveData(mode);
+
+    drawerList.innerHTML = data.map((item) => {
+      const isSelected = item.id === selectedItemId;
+      const subtitle = item.provinceEn ? `${item.provinceEn} Province · ${item.districtEn || ""}` : (item.nameKh || "");
+      const statSnippet = item.stats ? `${item.stats[0].label}: ${item.stats[0].value}` : (item.highlight || "");
+
+      return `
+        <button class="card-item ${isSelected ? "selected" : ""}" type="button" data-id="${item.id}">
+          <div class="card-top">
+            <div>
+              <div class="card-title-en">${item.nameEn}</div>
+              <div class="card-title-kh">${item.nameKh}</div>
+            </div>
+            <span class="badge">${item.statusBadge || (mode === "communes" ? "CFi Commune" : "Province")}</span>
+          </div>
+          <div class="card-highlight">${item.highlight || ""}</div>
+          <div class="card-footer">
+            <span>${statSnippet}</span>
+            <span class="arrow">→</span>
+          </div>
+        </button>
+      `;
+    }).join("");
+
+    drawerList.querySelectorAll("[data-id]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const item = data.find((d) => d.id === btn.dataset.id);
+        if (item) selectItem(item, mode);
       });
     });
   }
 
-  async function selectArea(area) {
-    if (!area) return;
-    selectedAreaId = area.id;
-    highlightSelectedArea();
-    await showAreaBoundary(area);
-    const marker = markers.get(area.id);
-    if (marker && selectedAreaId === area.id) {
-      marker.bringToFront();
-      marker.openPopup();
+  async function selectItem(item, mode) {
+    if (!item) return;
+    selectedItemId = item.id;
+
+    updateMarkersHighlight();
+    showDetailView(item, mode);
+
+    // If it's a Core Area with boundary polygon, fit to the polygon boundary!
+    if (mode === "coreAreas" && coreBoundaries.has(item.id)) {
+      resetCoreBoundariesStyle();
+      const layer = coreBoundaries.get(item.id);
+      layer.setStyle(getBoundaryStyle(true));
+      layer.bringToFront();
+
+      const isMobile = window.innerWidth <= 860;
+      map.fitBounds(layer.getBounds(), {
+        paddingTopLeft: isMobile ? [10, 80] : [440, 40],
+        paddingBottomRight: isMobile ? [10, 240] : [40, 40],
+        maxZoom: 14
+      });
+    } else {
+      resetCoreBoundariesStyle();
+      const zoomLevel = item.zoom || (mode === "communes" ? 12 : 10);
+      map.flyTo([item.lat, item.lng], zoomLevel, { duration: 1.2 });
+    }
+
+    const marker = markers.get(item.id);
+    if (marker) {
+      setTimeout(() => {
+        if (selectedItemId === item.id) marker.openPopup();
+      }, 500);
     }
   }
 
-  function clearSearch() {
-    searchInput.value = "";
-    searchInput.focus();
-    renderAreaList();
+  function showDetailView(item, mode) {
+    detailBadge.textContent = item.statusBadge || (mode === "communes" ? "Community Fishery" : "Lake Province");
+    detailTitleEn.textContent = item.nameEn;
+    detailTitleKh.textContent = item.nameKh;
+    detailHighlight.textContent = item.highlight || "";
+
+    // Render Stats Grid
+    if (item.stats && item.stats.length > 0) {
+      detailStats.innerHTML = item.stats.map((s) => `
+        <div class="stat-box">
+          <div class="stat-value">${s.value}</div>
+          <div class="stat-label">${s.label}</div>
+        </div>
+      `).join("");
+      detailStats.hidden = false;
+    } else if (item.communesList) {
+      detailStats.innerHTML = `
+        <div class="stat-box" style="grid-column: span 2;">
+          <div class="stat-value">${item.targetCommunesCount} Target Communes</div>
+          <div class="stat-label">${item.communesList.join(", ")}</div>
+        </div>
+      `;
+      detailStats.hidden = false;
+    } else {
+      detailStats.hidden = true;
+    }
+
+    detailDesc.textContent = item.description || "";
+    detailDesc.hidden = !item.description;
+
+    drawerList.hidden = true;
+    drawerDetail.hidden = false;
   }
 
-  function init() {
-    initializeMap();
-    createAreaMarkers();
-    renderAreaList();
-    searchInput.addEventListener("input", renderAreaList);
-    clearSearchButton.addEventListener("click", clearSearch);
+  function hideDetailView() {
+    drawerDetail.hidden = true;
+    drawerList.hidden = false;
+  }
+
+  function switchMode(newMode) {
+    if (currentMode === newMode && selectedItemId === null) return;
+    currentMode = newMode;
+    selectedItemId = null;
+
+    // Update Tab UI
+    [tabCore, tabCommunes, tabProvinces].forEach((tab) => {
+      tab.classList.toggle("active", tab.dataset.mode === newMode);
+    });
+
+    hideDetailView();
+    updateCategoryHeaders(newMode);
+    renderModeMarkers(newMode);
+    renderDrawerList(newMode);
+
+    // If switching to Core Areas, fit to show all 3 core areas
+    if (newMode === "coreAreas") {
+      resetCoreBoundariesStyle();
+    }
+  }
+
+  function setupEventListeners() {
+    tabCore.addEventListener("click", () => switchMode("coreAreas"));
+    tabCommunes.addEventListener("click", () => switchMode("communes"));
+    tabProvinces.addEventListener("click", () => switchMode("provinces"));
+
+    btnResetLake.addEventListener("click", resetWholeLakeView);
+
+    btnCloseDetail.addEventListener("click", () => {
+      hideDetailView();
+      renderDrawerList(currentMode);
+    });
+
+    btnDetailBack.addEventListener("click", () => {
+      hideDetailView();
+      renderDrawerList(currentMode);
+    });
+  }
+
+  async function init() {
+    initMap();
+    setupEventListeners();
+    await loadCoreBoundaries();
+    switchMode("coreAreas");
   }
 
   init();

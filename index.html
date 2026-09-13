@@ -1,35 +1,106 @@
 <!doctype html>
-<html lang="km">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="ផែនទីអន្តរកម្មបឹងទន្លេសាប" />
-    <title>បឹងទន្លេសាប · Tonlé Sap Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content="Tonlé Sap Lake Conservation Areas, Communes, and Provinces Interactive Map" />
+    <title>Tonlé Sap Conservation Map · បឹងទន្លេសាប</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Noto+Sans+Khmer:wght@500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <main class="map-app">
-      <div id="map" aria-label="ផែនទីបឹងទន្លេសាប"></div>
+    <main class="app-container">
+      <!-- Interactive Leaflet Map -->
+      <div id="map" aria-label="Interactive Tonle Sap Map"></div>
 
-      <aside class="search-panel" aria-label="ស្វែងរកទីតាំងនៅបឹងទន្លេសាប">
-        <header>
-          <h1>បឹងទន្លេសាប</h1>
-          <p>Tonlé Sap Map</p>
-        </header>
-        <div class="search-wrap">
-          <label class="sr-only" for="location-search">ស្វែងរកទីតាំង</label>
-          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" /></svg>
-          <input id="location-search" type="search" autocomplete="off" placeholder="ស្វែងរកទីតាំង..." />
-          <button id="clear-search" class="clear-search" type="button" aria-label="លុបការស្វែងរក" hidden>×</button>
+      <!-- Top Header Bar -->
+      <header class="top-nav" aria-label="Project Navigation">
+        <div class="brand">
+          <div class="brand-icon">🌿</div>
+          <div class="brand-text">
+            <h1>Tonlé Sap Lake</h1>
+            <p>Conservation Areas & Community Fisheries</p>
+          </div>
         </div>
-        <section class="important-areas" aria-labelledby="locations-heading">
-          <div class="locations-heading" id="locations-heading">ទីតាំងសំខាន់ៗ <small>Important Areas</small></div>
-          <div id="location-results" class="location-results" aria-live="polite"></div>
-        </section>
+
+        <button id="btn-reset-lake" class="btn-reset-lake" type="button" aria-label="Reset view to whole Tonle Sap lake">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+          <span>Whole Lake View</span>
+        </button>
+      </header>
+
+      <!-- Category Filter Tabs (Elder-friendly, large buttons) -->
+      <nav class="category-tabs" aria-label="Category Selection">
+        <button id="tab-core" class="cat-tab active" type="button" data-mode="coreAreas">
+          <span class="tab-emoji">🌿</span>
+          <span class="tab-label">
+            <strong>3 Core Areas</strong>
+            <small>តំបន់ស្នូលសំខាន់ៗ</small>
+          </span>
+        </button>
+
+        <button id="tab-communes" class="cat-tab" type="button" data-mode="communes">
+          <span class="tab-emoji">📍</span>
+          <span class="tab-label">
+            <strong>12 Communes</strong>
+            <small>សហគមន៍គោលដៅ</small>
+          </span>
+        </button>
+
+        <button id="tab-provinces" class="cat-tab" type="button" data-mode="provinces">
+          <span class="tab-emoji">🏛️</span>
+          <span class="tab-label">
+            <strong>5 Provinces</strong>
+            <small>ខេត្តជុំវិញបឹង</small>
+          </span>
+        </button>
+      </nav>
+
+      <!-- Explorer Drawer (Cards / Details) -->
+      <aside id="drawer" class="explorer-drawer" aria-label="Information Panel">
+        <!-- Handle for mobile drag visual -->
+        <div class="drawer-handle" aria-hidden="true"></div>
+
+        <!-- Header of active category -->
+        <div class="drawer-header">
+          <div id="drawer-category-title" class="drawer-category-title">
+            <h2>3 Core Conservation Areas</h2>
+            <p>UNESCO Biosphere Reserves & Ramsar Protected Wetlands</p>
+          </div>
+        </div>
+
+        <!-- List View Container -->
+        <div id="drawer-list" class="drawer-list" role="list"></div>
+
+        <!-- Single Selected Detail Card View -->
+        <article id="drawer-detail" class="drawer-detail" hidden aria-live="polite">
+          <header class="detail-header">
+            <div>
+              <span id="detail-badge" class="badge">Core Area</span>
+              <h3 id="detail-title-en">Prek Toal Core Conservation Area</h3>
+              <p id="detail-title-kh" class="kh-sub">តំបន់ស្នូលអភិរក្សព្រែកទាល់</p>
+            </div>
+            <button id="btn-close-detail" class="btn-close-detail" type="button" aria-label="Back to list">×</button>
+          </header>
+
+          <p id="detail-highlight" class="detail-highlight"></p>
+
+          <div id="detail-stats" class="detail-stats-grid"></div>
+
+          <p id="detail-desc" class="detail-description"></p>
+
+          <div class="detail-actions">
+            <button id="btn-detail-back" class="btn-detail-back" type="button">
+              ← Back to List
+            </button>
+          </div>
+        </article>
       </aside>
     </main>
 
