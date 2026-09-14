@@ -1,26 +1,409 @@
-:root { --deep: #064d49; --green: #087b72; --cream: #fffdf8; --orange: #d76d23; --ink: #173634; --shadow: 0 5px 18px rgba(16, 61, 57, .2); }
-* { box-sizing: border-box; }
-html, body, #map { width: 100%; height: 100%; margin: 0; }
-body { overflow: hidden; color: var(--ink); font-family: "Plus Jakarta Sans", "Noto Sans Khmer", sans-serif; background: #cce1df; }
-button { font: inherit; }
-.map-title { position: fixed; z-index: 1000; top: 14px; left: 14px; padding: 10px 13px 9px; background: rgba(255, 253, 248, .96); border-left: 5px solid var(--green); border-radius: 8px; box-shadow: var(--shadow); pointer-events: none; line-height: 1.15; }
-.map-title-en { display: block; font-family: "Plus Jakarta Sans", sans-serif; font-size: 1.08rem; font-weight: 800; letter-spacing: .01em; color: var(--deep); }
-.map-title-kh { display: block; margin-top: 3px; font-family: "Noto Sans Khmer", sans-serif; font-size: .76rem; font-weight: 700; color: #4a6664; }
-.map-actions { position: fixed; z-index: 1000; top: 14px; right: 14px; display: flex; gap: 8px; }
-.map-button { min-height: 46px; display: inline-flex; align-items: center; gap: 7px; border: 0; border-radius: 9px; padding: 8px 12px; background: var(--cream); color: var(--deep); box-shadow: var(--shadow); font-size: .86rem; font-weight: 700; cursor: pointer; touch-action: manipulation; }
-.map-button:hover, .map-button:focus-visible { outline: 3px solid rgba(8,123,114,.35); background: #fff; }
-.map-button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
-.map-button-icon { width: 46px; justify-content: center; padding: 8px; }
-.legend { position: fixed; z-index: 1100; top: 70px; right: 14px; width: 220px; padding: 14px; border-radius: 10px; background: var(--cream); box-shadow: var(--shadow); font-size: .84rem; }
-.legend[hidden], .info-card[hidden] { display: none; }
-.legend-title { margin: 0 24px 10px 0; color: var(--deep); font-weight: 700; }.legend-title span { font-family: "Plus Jakarta Sans", sans-serif; font-size: .72rem; color: #55706e; }
-.legend div { display: flex; align-items: center; gap: 9px; margin: 8px 0; }.legend div span { font-family: "Plus Jakarta Sans", sans-serif; font-weight: 700; }.legend div small { font-family: "Noto Sans Khmer", sans-serif; font-size: .72rem; color: #58706d; }.legend i { display: inline-flex; align-items: center; justify-content: center; width: 19px; height: 19px; flex: 0 0 19px; font-style: normal; }
-.legend-area { border: 3px solid var(--green); background: rgba(55,188,166,.38); border-radius: 4px; }.legend-province { border-radius: 4px; background: #eef1e3; color: #355c49; font-size: .7rem; font-weight: 700; }.legend-place { border: 3px solid #fff; border-radius: 50%; background: var(--orange); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
-.close-legend, .info-card button { position: absolute; right: 8px; top: 6px; width: 30px; height: 30px; border: 0; background: transparent; color: #456260; font-size: 1.45rem; line-height: 1; cursor: pointer; }
-.info-card { position: fixed; z-index: 1000; left: 50%; bottom: 18px; width: min(440px, calc(100% - 32px)); transform: translateX(-50%); padding: 13px 44px 12px 16px; border-radius: 10px; background: var(--cream); box-shadow: var(--shadow); text-align: left; }.info-card p { margin: 0; color: var(--deep); font: 800 1.02rem/1.35 "Plus Jakarta Sans", sans-serif; }.info-card span { display: block; margin-top: 3px; font: 700 .76rem/1.3 "Noto Sans Khmer", sans-serif; color: #5b7471; }
-.area-label-marker, .province-label-marker { background: transparent; border: 0; }.area-label { display: block; width: max-content; max-width: 220px; transform: translate(-50%, -50%); border: 2px solid var(--deep); border-radius: 8px; padding: 6px 9px; background: rgba(255,253,248,.94); box-shadow: 0 2px 8px rgba(6,77,73,.22); color: var(--deep); text-align: center; cursor: pointer; touch-action: manipulation; }.area-label span, .area-label small { display: block; }.area-label span { font: 800 .82rem/1.35 "Plus Jakarta Sans", sans-serif; }.area-label small { margin-top: 2px; font: 700 .67rem/1.25 "Noto Sans Khmer", sans-serif; }.area-label:hover, .area-label:focus-visible { background: var(--deep); color: white; outline: 3px solid rgba(8,123,114,.35); }
-.province-label { width: max-content; transform: translate(-50%, -50%); padding: 3px 6px; border-radius: 5px; background: rgba(255,253,248,.72); color: #345846; text-align: center; text-shadow: 0 1px 0 #fff; }.province-label span, .province-label small { display: block; }.province-label span { font: 800 .92rem/1.3 "Plus Jakarta Sans", sans-serif; }.province-label small { font: 700 .64rem/1.25 "Noto Sans Khmer", sans-serif; }
-.place-tooltip { padding: 2px 5px; border: 0; border-radius: 4px; background: rgba(255,253,248,.91); box-shadow: 0 1px 3px rgba(0,0,0,.18); color: #5c2e14; line-height: 1.2; }.place-tooltip:before { display: none; }.place-name-en { display: block; font: 800 .65rem/1.2 "Plus Jakarta Sans", sans-serif; }.place-name-kh { display: block; font: 700 .58rem/1.15 "Noto Sans Khmer", sans-serif; color: #85624f; }
-.leaflet-control-zoom { border: 0 !important; box-shadow: var(--shadow) !important; }.leaflet-control-zoom a { width: 40px !important; height: 40px !important; line-height: 38px !important; color: var(--deep) !important; }.leaflet-control-attribution { font-family: "Plus Jakarta Sans", sans-serif; font-size: 9px !important; }
-@media (max-width: 700px) { .map-title { top: 10px; left: 10px; padding: 8px 10px 7px; }.map-title-en { font-size: .98rem; }.map-actions { top: 10px; right: 10px; }.map-button { min-height: 44px; padding: 8px 10px; }.map-button span { display: none; }.map-button-icon { width: 44px; }.legend { top: auto; bottom: 12px; right: 12px; left: 12px; width: auto; padding: 13px 16px; }.info-card { bottom: 12px; }.area-label { max-width: 165px; padding: 5px 7px; }.area-label span { font-size: .70rem; }.area-label small { font-size: .62rem; }.province-label span { font-size: .76rem; }.province-label small { font-size: .58rem; }.place-tooltip { display: none; }.local-place-marker { cursor: pointer; }.leaflet-bottom.leaflet-right { bottom: 74px; }.leaflet-control-zoom { display: none; } }
-@media (max-width: 380px) { .map-title-kh { display: none; }.area-label { max-width: 140px; }.area-label span { font-size: .62rem; }.area-label small { display: none; }.province-label span { font-size: .68rem; }.province-label small { display: none; } }
+:root {
+  --primary-area: #0d7a64;
+  --primary-area-dark: #064e3b;
+  --primary-area-fill: #10b981;
+  --primary-point: #d9531e;
+  --primary-point-dark: #b71c1c;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --shadow-card: 0 10px 28px rgba(10, 48, 43, 0.18);
+  --shadow-soft: 0 3px 10px rgba(0, 0, 0, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #map {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: "Plus Jakarta Sans", "Noto Sans Khmer", sans-serif;
+  background: #cbe3de;
+}
+
+/* ----------------------------------------------------
+   TOP HEADER BANNER
+   ---------------------------------------------------- */
+.map-header {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  pointer-events: none;
+}
+
+.header-card {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 8px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(13, 122, 100, 0.22);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.header-title-kh {
+  font-family: "Noto Sans Khmer", sans-serif;
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: var(--primary-area-dark);
+  line-height: 1.25;
+}
+
+.header-title-en {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--primary-area);
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+/* ----------------------------------------------------
+   MAP LEGEND
+   ---------------------------------------------------- */
+.map-legend {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 998;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(13, 122, 100, 0.2);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.legend-box.area-swatch {
+  width: 18px;
+  height: 14px;
+  background: rgba(16, 185, 129, 0.25);
+  border: 2px solid var(--primary-area);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legend-circle.point-swatch {
+  width: 14px;
+  height: 14px;
+  background: var(--primary-point);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.legend-labels {
+  display: flex;
+  flex-direction: column;
+}
+
+.legend-kh {
+  font-family: "Noto Sans Khmer", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.legend-en {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.1;
+}
+
+/* ----------------------------------------------------
+   CONSERVATION AREA TOOLTIP ON MAP
+   ---------------------------------------------------- */
+.leaflet-tooltip.conservation-area-tooltip {
+  background: rgba(240, 253, 250, 0.96) !important;
+  border: 2px solid var(--primary-area) !important;
+  border-radius: 9px !important;
+  box-shadow: 0 4px 14px rgba(6, 95, 70, 0.22) !important;
+  padding: 5px 11px !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  white-space: nowrap !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.leaflet-tooltip.conservation-area-tooltip::before {
+  display: none !important;
+}
+
+.leaflet-tooltip.conservation-area-tooltip:hover,
+.leaflet-tooltip.conservation-area-tooltip.is-highlighted {
+  background: #d1fae5 !important;
+  border-color: var(--primary-area-dark) !important;
+  box-shadow: 0 6px 18px rgba(6, 78, 59, 0.32) !important;
+}
+
+.area-label-card {
+  text-align: center;
+  user-select: none;
+}
+
+.area-label-kh {
+  font-family: "Noto Sans Khmer", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--primary-area-dark);
+  line-height: 1.25;
+}
+
+.area-label-en {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--primary-area);
+  line-height: 1.2;
+  margin-top: 1px;
+}
+
+/* ----------------------------------------------------
+   COMMUNE POINT TOOLTIPS
+   ---------------------------------------------------- */
+.leaflet-tooltip.commune-point-tooltip {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1.5px solid rgba(217, 83, 30, 0.35) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.14) !important;
+  padding: 4px 9px !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  white-space: nowrap !important;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.leaflet-tooltip.commune-point-tooltip::before {
+  border-top-color: rgba(255, 255, 255, 0.96) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.96) !important;
+  border-left-color: rgba(255, 255, 255, 0.96) !important;
+  border-right-color: rgba(255, 255, 255, 0.96) !important;
+}
+
+.leaflet-tooltip.commune-point-tooltip:hover {
+  border-color: var(--primary-point) !important;
+  box-shadow: 0 4px 14px rgba(217, 83, 30, 0.25) !important;
+}
+
+.point-label-wrapper {
+  text-align: center;
+  user-select: none;
+}
+
+.point-name-kh {
+  font-family: "Noto Sans Khmer", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1.25;
+}
+
+.point-name-en {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #475569;
+  line-height: 1.15;
+  margin-top: 1px;
+}
+
+/* ----------------------------------------------------
+   POINT MARKER INTERACTION
+   ---------------------------------------------------- */
+.commune-point-marker {
+  cursor: pointer;
+  transition: r 0.2s ease;
+}
+
+/* ----------------------------------------------------
+   BOTTOM POPUP / CARD (TAP BEHAVIOR)
+   ---------------------------------------------------- */
+.info-card {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(400px, calc(100% - 32px));
+  z-index: 1000;
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1.5px solid rgba(13, 122, 100, 0.25);
+  box-shadow: var(--shadow-card);
+  padding: 16px 52px 16px 20px;
+  text-align: left;
+  animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.info-card[hidden] {
+  display: none !important;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.info-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #f1f5f9;
+  border-radius: 50%;
+  color: #475569;
+  font-size: 1.5rem;
+  line-height: 34px;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.info-close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.info-khmer {
+  font-family: "Noto Sans Khmer", sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.info-english {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.3;
+  margin-top: 3px;
+}
+
+/* ----------------------------------------------------
+   LEAFLET CONTROLS
+   ---------------------------------------------------- */
+.leaflet-control-zoom {
+  border: 0 !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+.leaflet-control-zoom a {
+  width: 38px !important;
+  height: 38px !important;
+  line-height: 38px !important;
+  color: var(--primary-area-dark) !important;
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+}
+
+.leaflet-control-attribution {
+  font-size: 9px !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* ----------------------------------------------------
+   RESPONSIVE / MOBILE DESIGN (MOBILE FIRST)
+   ---------------------------------------------------- */
+@media (max-width: 768px) {
+  .map-header {
+    top: 10px;
+    width: calc(100% - 24px);
+  }
+
+  .header-card {
+    padding: 6px 14px;
+  }
+
+  .header-title-kh {
+    font-size: 1.05rem;
+  }
+
+  .header-title-en {
+    font-size: 0.65rem;
+  }
+
+  .map-legend {
+    top: auto;
+    bottom: 18px;
+    left: 12px;
+    padding: 8px 11px;
+    gap: 6px;
+    border-radius: 10px;
+  }
+
+  .legend-kh {
+    font-size: 0.75rem;
+  }
+
+  .legend-en {
+    font-size: 0.62rem;
+  }
+
+  .info-card {
+    bottom: 12px;
+    padding: 14px 44px 14px 16px;
+  }
+
+  .info-khmer {
+    font-size: 1.22rem;
+  }
+
+  .info-english {
+    font-size: 0.88rem;
+  }
+
+  .leaflet-bottom.leaflet-right {
+    bottom: 74px;
+  }
+
+  .area-label-kh {
+    font-size: 0.78rem;
+  }
+
+  .area-label-en {
+    font-size: 0.62rem;
+  }
+
+  .point-name-kh {
+    font-size: 0.75rem;
+  }
+
+  .point-name-en {
+    font-size: 0.62rem;
+  }
+}

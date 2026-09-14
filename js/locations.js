@@ -1,27 +1,147 @@
-/* Display data only: names and coordinates. No statistics are shown in this first map view. */
+/**
+ * Tonlé Sap Map Dataset
+ * Contains ONLY:
+ * 1. Exactly 3 important conservation/wetland areas (polygons)
+ * 2. Exactly 12 commune / local-area points
+ */
+
 const importantAreas = [
-  { id: "prek-toal", nameKh: "តំបន់ស្នូលអភិរក្សព្រែកទាល់", nameEn: "Prek Toal Core Conservation Area", center: [13.1485, 103.6532], geoJsonFile: "data/prek-toal.geojson" },
-  { id: "boeng-chhmar", nameKh: "តំបន់ស្នូលបឹងឆ្មារ", nameEn: "Boeng Chhmar Core Area", center: [12.7956, 104.3211], geoJsonFile: "data/boeng-chhmar.geojson" },
-  { id: "stung-sen", nameKh: "តំបន់រ៉ាមសារស្ទឹងសែន", nameEn: "Stung Sen Ramsar Site", center: [12.6171, 104.5143], geoJsonFile: "data/stung-sen-ramsar.geojson" }
+  {
+    id: "prek-toal-core-area",
+    nameKh: "តំបន់ស្នូលអភិរក្សព្រែកទាល់",
+    nameEn: "Prek Toal Core Conservation Area",
+    lat: 13.1400,
+    lng: 103.6850,
+    geoJsonFile: "data/prek-toal.geojson"
+  },
+  {
+    id: "boeng-chhmar-core-area",
+    nameKh: "តំបន់ស្នូលបឹងឆ្មារ",
+    nameEn: "Boeng Chhmar Core Area",
+    lat: 12.8300,
+    lng: 104.3400,
+    geoJsonFile: "data/boeng-chhmar.geojson"
+  },
+  {
+    id: "stung-sen-ramsar",
+    nameKh: "តំបន់រ៉ាមសារស្ទឹងសែន",
+    nameEn: "Stung Sen Ramsar Site",
+    lat: 12.6150,
+    lng: 104.5500,
+    geoJsonFile: "data/stung-sen-ramsar.geojson"
+  }
 ];
-const provinces = [
-  { id: "siem-reap", nameKh: "សៀមរាប", nameEn: "Siem Reap", lat: 13.30, lng: 104.35 },
-  { id: "kampong-thom", nameKh: "កំពង់ធំ", nameEn: "Kampong Thom", lat: 12.90, lng: 104.62 },
-  { id: "kampong-chhnang", nameKh: "កំពង់ឆ្នាំង", nameEn: "Kampong Chhnang", lat: 12.47, lng: 104.05 },
-  { id: "pursat", nameKh: "ពោធិ៍សាត់", nameEn: "Pursat", lat: 12.77, lng: 103.55 },
-  { id: "battambang", nameKh: "បាត់ដំបង", nameEn: "Battambang", lat: 13.10, lng: 103.42 }
-];
+
 const localPlaces = [
-  { id: "prek-toal-village", nameKh: "ព្រែកទាល់", nameEn: "Prek Toal", provinceId: "battambang", lat: 13.203, lng: 103.680 },
-  { id: "koh-chiveang", nameKh: "កោះជីវាំង", nameEn: "Koh Chiveang", provinceId: "battambang", lat: 13.039, lng: 103.498 },
-  { id: "kampong-phluk", nameKh: "កំពង់ភ្លុក", nameEn: "Kampong Phluk", provinceId: "siem-reap", lat: 13.214, lng: 104.122 },
-  { id: "chong-kneas", nameKh: "ចុងឃ្នាស", nameEn: "Chong Kneas", provinceId: "siem-reap", lat: 13.312, lng: 103.986 },
-  { id: "kampong-khleang", nameKh: "កំពង់ឃ្លាំង", nameEn: "Kampong Khleang", provinceId: "siem-reap", lat: 12.873, lng: 104.196 },
-  { id: "peam-bang", nameKh: "ពាមបាង", nameEn: "Peam Bang", provinceId: "kampong-thom", lat: 12.873, lng: 104.309 },
-  { id: "boeng-chhmar-village", nameKh: "បឹងឆ្មារ", nameEn: "Boeng Chhmar", provinceId: "kampong-thom", lat: 12.782, lng: 104.425 },
-  { id: "kampong-svay", nameKh: "កំពង់ស្វាយ", nameEn: "Kampong Svay", provinceId: "kampong-thom", lat: 12.550, lng: 104.590 },
-  { id: "chhnok-tru", nameKh: "ឆ្នុកទ្រូ", nameEn: "Chhnok Tru", provinceId: "kampong-chhnang", lat: 12.534, lng: 104.182 },
-  { id: "kampong-chhnang-town", nameKh: "កំពង់ឆ្នាំង", nameEn: "Kampong Chhnang", provinceId: "kampong-chhnang", lat: 12.252, lng: 104.666 },
-  { id: "kampong-luong", nameKh: "កំពង់លួង", nameEn: "Kampong Luong", provinceId: "pursat", lat: 12.690, lng: 103.701 },
-  { id: "krakor", nameKh: "ក្រគរ", nameEn: "Krakor", provinceId: "pursat", lat: 12.483, lng: 103.615 }
+  {
+    id: "kampong-phluk",
+    nameKh: "កំពង់ភ្លុក",
+    nameEn: "Kampong Phluk",
+    lat: 13.1986,
+    lng: 104.2240,
+    labelDirection: "top",
+    labelOffset: [0, -8]
+  },
+  {
+    id: "chong-khneas",
+    nameKh: "ចុងឃ្នៀស",
+    nameEn: "Chong Khneas",
+    lat: 13.2036,
+    lng: 103.9812,
+    labelDirection: "bottom",
+    labelOffset: [0, 8]
+  },
+  {
+    id: "keo-por",
+    nameKh: "កែវពណ៌",
+    nameEn: "Keo Por",
+    aliasesEn: ["Kaev Poar"],
+    lat: 13.2842,
+    lng: 103.7651,
+    labelDirection: "top",
+    labelOffset: [0, -8]
+  },
+  {
+    id: "doun-sdaeng",
+    nameKh: "ដូនស្តើង",
+    nameEn: "Doun Sdaeng",
+    aliasesEn: ["Don Sdaeng"],
+    lat: 12.5370,
+    lng: 104.4709,
+    labelDirection: "bottom",
+    labelOffset: [0, 8]
+  },
+  {
+    id: "tuol-neang-sav",
+    nameKh: "ទួលនាងសាវ",
+    nameEn: "Tuol Neang Sav",
+    lat: 12.5550,
+    lng: 104.4350,
+    labelDirection: "top",
+    labelOffset: [0, -8]
+  },
+  {
+    id: "kampong-kou",
+    nameKh: "កំពង់គោ",
+    nameEn: "Kampong Kou",
+    aliasesEn: ["Kampong Ko"],
+    lat: 12.7482,
+    lng: 104.8143,
+    labelDirection: "left",
+    labelOffset: [-8, 0]
+  },
+  {
+    id: "phlov-touk",
+    nameKh: "ផ្លូវទូក",
+    nameEn: "Phlov Touk",
+    lat: 12.5340,
+    lng: 104.1820,
+    labelDirection: "bottom",
+    labelOffset: [0, 8]
+  },
+  {
+    id: "local-08",
+    nameKh: "ច្រណូក",
+    nameEn: "Chranouk",
+    lat: 12.3943,
+    lng: 104.6242,
+    labelDirection: "bottom",
+    labelOffset: [0, 8]
+  },
+  {
+    id: "reang-til",
+    nameKh: "រាំងទិល",
+    nameEn: "Reang Til",
+    lat: 12.7849,
+    lng: 104.0071,
+    labelDirection: "bottom",
+    labelOffset: [0, 8]
+  },
+  {
+    id: "prek-kra",
+    nameKh: "ព្រែកក្រ",
+    nameEn: "Prek Kra",
+    lat: 12.6954,
+    lng: 103.7404,
+    labelDirection: "left",
+    labelOffset: [-8, 0]
+  },
+  {
+    id: "bak-prea",
+    nameKh: "បាក់ព្រា",
+    nameEn: "Bak Prea",
+    lat: 13.1180,
+    lng: 103.5420,
+    labelDirection: "left",
+    labelOffset: [-8, 0]
+  },
+  {
+    id: "prek-toal",
+    nameKh: "ព្រែកទាល់",
+    nameEn: "Prek Toal",
+    lat: 13.1950,
+    lng: 103.6550,
+    labelDirection: "left",
+    labelOffset: [-8, 0]
+  }
 ];
