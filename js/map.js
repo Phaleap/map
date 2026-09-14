@@ -1,191 +1,80 @@
-/* global L, importantAreas */
+/* global L, importantAreas, provinces, localPlaces */
 (function () {
   "use strict";
-
-  // Coordinates encompassing the entire Tonlé Sap lake
-  const lakeBounds = L.latLngBounds([12.20, 103.45], [13.45, 104.85]);
-  const dragBounds = L.latLngBounds([11.80, 103.10], [13.75, 105.20]);
-
+  const lakeBounds = L.latLngBounds([12.28, 103.38], [13.42, 104.82]);
+  const dragBounds = L.latLngBounds([11.95, 103.05], [13.75, 105.15]);
+  const areaLayers = new Map();
+  const placeMarkers = new Map();
   let map;
-  let selectedAreaId = null;
+  const infoCard = document.getElementById("info-card");
+  const infoKh = document.getElementById("info-kh");
+  const infoEn = document.getElementById("info-en");
+  const legend = document.getElementById("legend");
+  const legendButton = document.getElementById("btn-legend");
 
-  const markers = new Map();
-  const boundaryLayers = new Map();
-  const geoJsonCache = new Map();
-
-  const btnResetView = document.getElementById("btn-reset-view");
-
-  function initMap() {
-    map = L.map("map", {
-      zoomControl: true,
-      scrollWheelZoom: true,
-      maxBounds: dragBounds,
-      maxBoundsViscosity: 0.85,
-      minZoom: 9,
-      maxZoom: 16
-    });
-
-    // Move zoom control to top-left with generous spacing
-    map.zoomControl.setPosition("topleft");
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "&copy; <a href='https://openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
-    }).addTo(map);
-
-    resetToWholeLake();
+  function initializeMap() {
+    map = L.map("map", { zoomControl: true, minZoom: 9, maxZoom: 15, maxBounds: dragBounds, maxBoundsViscosity: 0.8, zoomSnap: 0.25 });
+    map.zoomControl.setPosition("bottomright");
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap contributors" }).addTo(map);
+    resetToTonleSap();
   }
-
-  function resetToWholeLake() {
-    selectedAreaId = null;
-    map.closePopup();
-    resetBoundaryStyles();
-    updateMarkerSelection();
-    map.fitBounds(lakeBounds, { padding: [30, 30] });
+  function areaStyle(isSelected) { return { color: isSelected ? "#004f49" : "#087b72", weight: isSelected ? 5 : 3, opacity: 1, fillColor: "#37bca6", fillOpacity: isSelected ? 0.43 : 0.20 }; }
+  function showInfo(item) { infoEn.textContent = item.nameEn; infoKh.textContent = item.nameKh; infoCard.hidden = false; }
+  function clearSelection() {
+    areaLayers.forEach((layer) => layer.setStyle(areaStyle(false)));
+    placeMarkers.forEach((marker) => marker.setStyle({ fillColor: "#d76d23", color: "#ffffff", weight: 3, radius: 9 }));
   }
-
-  function getBoundaryStyle(isSelected) {
-    if (isSelected) {
-      return {
-        color: "#087f73",
-        weight: 3.5,
-        dashArray: null,
-        fillColor: "#18a999",
-        fillOpacity: 0.22
-      };
-    }
-    return {
-      color: "#0f766e",
-      weight: 2,
-      dashArray: "6, 6",
-      fillColor: "#14b8a6",
-      fillOpacity: 0.09
-    };
+  function highlightArea(area, fitToArea) {
+    clearSelection();
+    const layer = areaLayers.get(area.id);
+    if (layer) { layer.setStyle(areaStyle(true)); layer.bringToFront(); if (fitToArea) map.fitBounds(layer.getBounds(), { padding: [55, 55], maxZoom: 12 }); }
+    showInfo(area);
   }
-
-  function resetBoundaryStyles() {
-    boundaryLayers.forEach((layer, id) => {
-      layer.setStyle(getBoundaryStyle(id === selectedAreaId));
+  function highlightLocalPlace(place) {
+    clearSelection();
+    const marker = placeMarkers.get(place.id);
+    if (marker) marker.setStyle({ fillColor: "#9d3f05", color: "#ffffff", weight: 4, radius: 12 });
+    showInfo(place);
+  }
+  async function loadImportantAreaPolygons() {
+    await Promise.all(importantAreas.map(async (area) => {
+      try {
+        const response = await fetch(area.geoJsonFile);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const geoJson = await response.json();
+        const layer = L.geoJSON(geoJson, { style: areaStyle(false) }).addTo(map);
+        layer.on("click", () => highlightArea(area, false));
+        areaLayers.set(area.id, layer);
+        addAreaLabel(area);
+      } catch (error) { console.error(`Could not load conservation area: ${area.id}`, error); }
+    }));
+  }
+  function addAreaLabel(area) {
+    const icon = L.divIcon({ className: "area-label-marker", html: `<button class="area-label" type="button" aria-label="${area.nameEn}"><span>${area.nameEn}</span><small>${area.nameKh}</small></button>`, iconSize: [0, 0], iconAnchor: [0, 0] });
+    L.marker(area.center, { icon, keyboard: false, interactive: true, zIndexOffset: 500 }).on("click", () => highlightArea(area, true)).addTo(map);
+  }
+  function renderProvinceLabels() {
+    provinces.forEach((province) => {
+      const icon = L.divIcon({ className: "province-label-marker", html: `<div class="province-label"><span>${province.nameEn}</span><small>${province.nameKh}</small></div>`, iconSize: [0, 0], iconAnchor: [0, 0] });
+      L.marker([province.lat, province.lng], { icon, interactive: false, keyboard: false, zIndexOffset: 100 }).addTo(map);
     });
   }
-
-  function updateMarkerSelection() {
-    markers.forEach((marker, id) => {
-      const el = marker.getElement();
-      if (!el) return;
-      const wrapper = el.querySelector(".area-pin-wrapper");
-      if (wrapper) {
-        wrapper.classList.toggle("selected", id === selectedAreaId);
-      }
-      marker.setZIndexOffset(id === selectedAreaId ? 1000 : 0);
+  function renderLocalPlaceMarkers() {
+    localPlaces.forEach((place) => {
+      const marker = L.circleMarker([place.lat, place.lng], { radius: 9, fillColor: "#d76d23", color: "#ffffff", weight: 3, fillOpacity: 1, className: "local-place-marker" }).addTo(map);
+      marker.bindTooltip(`<span class="place-name-en">${place.nameEn}</span><span class="place-name-kh">${place.nameKh}</span>`, { className: "place-tooltip", permanent: true, direction: "right", offset: [9, 0] });
+      marker.on("click", () => highlightLocalPlace(place));
+      placeMarkers.set(place.id, marker);
     });
   }
-
-  function createPopupContent(area) {
-    return `
-      <div class="popup-card">
-        <div class="popup-badge-row">
-          <span class="popup-badge">${area.badge}</span>
-          <span class="popup-size">${area.areaSize}</span>
-        </div>
-        <div class="popup-title-en">${area.nameEn}</div>
-        <div class="popup-title-kh">${area.nameKh}</div>
-        <p class="popup-summary">${area.summary}</p>
-        <div class="popup-province">📍 ${area.provinceEn} · ${area.provinceKh}</div>
-      </div>
-    `;
+  function resetToTonleSap() { clearSelection(); infoCard.hidden = true; map.fitBounds(lakeBounds, { padding: [22, 22], animate: true }); }
+  function toggleLegend() { const willOpen = legend.hidden; legend.hidden = !willOpen; legendButton.setAttribute("aria-expanded", String(willOpen)); }
+  function setupMobileUI() {
+    document.getElementById("btn-reset-view").addEventListener("click", resetToTonleSap);
+    legendButton.addEventListener("click", toggleLegend);
+    document.getElementById("btn-close-legend").addEventListener("click", toggleLegend);
+    document.getElementById("btn-close-info").addEventListener("click", () => { infoCard.hidden = true; });
   }
-
-  async function loadAreaBoundariesAndMarkers() {
-    for (const area of importantAreas) {
-      // 1. Create friendly pin marker with permanent label
-      const shortName = area.nameEn.replace(" Core Conservation Area", "").replace(" Core Area", "").replace(" Ramsar Site", "");
-      const icon = L.divIcon({
-        className: "area-marker-container",
-        html: `
-          <div class="area-pin-wrapper" title="${area.nameEn}">
-            <div class="area-pin-icon">🌿</div>
-            <div class="area-pin-label">${shortName}</div>
-          </div>
-        `,
-        iconSize: [0, 0],
-        iconAnchor: [0, 0],
-        popupAnchor: [0, -35]
-      });
-
-      const marker = L.marker([area.lat, area.lng], { icon })
-        .bindPopup(createPopupContent(area), {
-          className: "donor-popup-wrapper",
-          autoPanPadding: [60, 60],
-          closeButton: true
-        });
-
-      marker.on("click", () => selectArea(area));
-      marker.addTo(map);
-      markers.set(area.id, marker);
-
-      // 2. Load and render real boundary polygon
-      if (area.geoJsonFile) {
-        try {
-          let geojson = geoJsonCache.get(area.geoJsonFile);
-          if (!geojson) {
-            const res = await fetch(area.geoJsonFile);
-            geojson = await res.json();
-            geoJsonCache.set(area.geoJsonFile, geojson);
-          }
-
-          const layer = L.geoJSON(geojson, {
-            style: getBoundaryStyle(false)
-          }).addTo(map);
-
-          layer.bringToBack();
-          layer.on("click", () => selectArea(area));
-          boundaryLayers.set(area.id, layer);
-        } catch (err) {
-          console.error("Could not load GeoJSON boundary for:", area.nameEn, err);
-        }
-      }
-    }
-  }
-
-  function selectArea(area) {
-    if (!area) return;
-    selectedAreaId = area.id;
-
-    // Highlight this boundary and bring to front
-    resetBoundaryStyles();
-    updateMarkerSelection();
-
-    const layer = boundaryLayers.get(area.id);
-    if (layer) {
-      layer.setStyle(getBoundaryStyle(true));
-      layer.bringToFront();
-
-      // Zoom & fit to the actual polygon boundary with comfortable padding
-      map.fitBounds(layer.getBounds(), {
-        padding: [60, 60],
-        maxZoom: 13
-      });
-    } else {
-      map.flyTo([area.lat, area.lng], 12, { duration: 1.2 });
-    }
-
-    // Open popup after positioning
-    const marker = markers.get(area.id);
-    if (marker) {
-      setTimeout(() => {
-        if (selectedAreaId === area.id) {
-          marker.openPopup();
-        }
-      }, 450);
-    }
-  }
-
-  function init() {
-    initMap();
-    loadAreaBoundariesAndMarkers();
-    btnResetView.addEventListener("click", resetToWholeLake);
-  }
-
+  function init() { initializeMap(); renderProvinceLabels(); renderLocalPlaceMarkers(); loadImportantAreaPolygons(); setupMobileUI(); }
   init();
 }());

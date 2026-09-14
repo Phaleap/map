@@ -2,28 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="description" content="Tonlé Sap Lake Important Conservation Areas" />
-    <title>Tonlé Sap Map · បឹងទន្លេសាប</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A simple map of Tonlé Sap Lake conservation areas and communities." />
+    <title>Tonlé Sap Map · ផែនទីបឹងទន្លេសាប</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Noto+Sans+Khmer:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <!-- Fullscreen Leaflet Map -->
-    <div id="map" aria-label="Tonlé Sap Map"></div>
-
-    <!-- Minimal Reset Button for Elderly Donors -->
-    <button id="btn-reset-view" class="floating-reset-btn" type="button" aria-label="Reset to whole lake view">
-      <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-        <path d="M3 3v5h5"/>
-      </svg>
-      <span>Whole Lake View</span>
-    </button>
-
+    <main id="map" aria-label="Tonlé Sap Map · ផែនទីបឹងទន្លេសាប"></main>
+    <header class="map-title" aria-label="Tonlé Sap Map"><span class="map-title-en">Tonlé Sap Map</span><span class="map-title-kh">ផែនទីបឹងទន្លេសាប</span></header>
+    <div class="map-actions" aria-label="Map controls">
+      <button id="btn-reset-view" class="map-button" type="button" aria-label="Reset to Tonlé Sap overview" title="Tonlé Sap overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" /></svg><span>Lake overview</span></button>
+      <button id="btn-legend" class="map-button map-button-icon" type="button" aria-expanded="false" aria-controls="legend" aria-label="Open map legend"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14" /></svg></button>
+    </div>
+    <section id="legend" class="legend" aria-label="Map legend" hidden><button id="btn-close-legend" class="close-legend" type="button" aria-label="Close legend">×</button><p class="legend-title">Map key <span>· សញ្ញាផែនទី</span></p><div><i class="legend-area"></i><span>Conservation area <small>· តំបន់អភិរក្សសំខាន់</small></span></div><div><i class="legend-province">P</i><span>Province <small>· ខេត្តជុំវិញបឹង</small></span></div><div><i class="legend-place"></i><span>Community place <small>· តំបន់សហគមន៍</small></span></div></section>
+    <section id="info-card" class="info-card" aria-live="polite" hidden><button id="btn-close-info" type="button" aria-label="Close information">×</button><p id="info-en"></p><span id="info-kh"></span></section>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/locations.js"></script>
     <script src="js/map.js"></script>
