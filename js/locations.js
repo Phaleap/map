@@ -77,8 +77,8 @@ const localPlaces = [
     nameEn: "Tuol Neang Sav",
     lat: 12.558440,
     lng: 104.499757,
-    labelDirection: "top",
-    labelOffset: [0, -8]
+    labelDirection: "left",
+    labelOffset: [-14, 4]
   },
   {
     id: "kampong-kou",
@@ -87,8 +87,8 @@ const localPlaces = [
     aliasesEn: ["Kampong Ko"],
     lat: 12.708523,
     lng: 104.788988,
-    labelDirection: "left",
-    labelOffset: [-8, 0]
+    labelDirection: "right",
+    labelOffset: [10, -10]
   },
   {
     id: "phlov-touk",
