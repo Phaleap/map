@@ -2,7 +2,6 @@
 (function (global) {
   "use strict";
 
-  const CSV_FILENAME = "tonle-sap-coordinates.csv";
   const CENTROID_METHOD = "Area-weighted polygon centroid (inside polygon)";
   const INTERIOR_METHOD = "Interior point from widest polygon scanline (centroid was outside)";
 
@@ -322,80 +321,6 @@
     return { kbaAreas, communes };
   }
 
-  function csvCell(value) {
-    return `"${String(value).replace(/"/g, '""')}"`;
-  }
-
-  function createCsv(summary) {
-    const rows = [
-      ["Type", "Khmer Name", "English Name", "Latitude", "Longitude"],
-      ...summary.kbaAreas.map((area) => [
-        "KBA/Core Area",
-        area.nameKh,
-        area.nameEn,
-        area.lat.toFixed(6),
-        area.lng.toFixed(6)
-      ]),
-      ...summary.communes.map((commune) => [
-        "Commune/Project Site",
-        commune.nameKh,
-        commune.nameEn,
-        commune.lat.toFixed(6),
-        commune.lng.toFixed(6)
-      ])
-    ];
-
-    return rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
-  }
-
-  function copyText(summary) {
-    const lines = [
-      "3 KBA/Core Areas",
-      ...summary.kbaAreas.map((area, index) => (
-        `${index + 1}. ${area.nameKh} | ${area.nameEn} | ${area.lat.toFixed(6)}, ${area.lng.toFixed(6)}`
-      )),
-      "",
-      "12 Communes / Project Sites",
-      ...summary.communes.map((commune, index) => (
-        `${index + 1}. ${commune.nameKh} | ${commune.nameEn} | ${commune.lat.toFixed(6)}, ${commune.lng.toFixed(6)}`
-      ))
-    ];
-    return lines.join("\n");
-  }
-
-  function downloadCsv(summary) {
-    const blob = new Blob(["\uFEFF", createCsv(summary)], {
-      type: "text/csv;charset=utf-8"
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = CSV_FILENAME;
-    link.hidden = true;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 0);
-  }
-
-  async function writeToClipboard(text) {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
-      return;
-    }
-
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    textArea.setAttribute("readonly", "");
-    textArea.style.position = "fixed";
-    textArea.style.opacity = "0";
-    document.body.appendChild(textArea);
-    textArea.select();
-    const copied = document.execCommand("copy");
-    textArea.remove();
-    if (!copied) throw new Error("Copying coordinates is not supported by this browser.");
-  }
-
   function addCell(row, value, className, label) {
     const cell = document.createElement("td");
     cell.textContent = value;
@@ -429,16 +354,14 @@
     const panelToggle = document.getElementById("coordinate-table-toggle");
     const kbaTableBody = document.getElementById("kba-coordinate-table-body");
     const kbaMethodList = document.getElementById("kba-coordinate-methods");
-    const copyButton = document.getElementById("copy-coordinates-button");
-    const csvButton = document.getElementById("csv-export-button");
     const status = document.getElementById("coordinate-summary-status");
     const communeTab = document.getElementById("commune-coordinates-tab");
     const kbaTab = document.getElementById("kba-coordinates-tab");
     const communePanel = document.getElementById("commune-coordinates-panel");
     const kbaPanel = document.getElementById("kba-coordinates-panel");
     if (
-      !panelToggle || !kbaTableBody || !kbaMethodList || !copyButton || !csvButton ||
-      !status || !communeTab || !kbaTab || !communePanel || !kbaPanel
+      !panelToggle || !kbaTableBody || !kbaMethodList || !status || !communeTab ||
+      !kbaTab || !communePanel || !kbaPanel
     ) return;
 
     let summaryPromise = null;
@@ -470,8 +393,6 @@
           .then((summary) => {
             currentSummary = summary;
             renderKbaTable(summary.kbaAreas, kbaTableBody, kbaMethodList);
-            copyButton.disabled = false;
-            csvButton.disabled = false;
             setStatus("", false);
             return summary;
           })
@@ -511,34 +432,11 @@
       });
     });
 
-    copyButton.addEventListener("click", async () => {
-      try {
-        const summary = await ensureSummary();
-        await writeToClipboard(copyText(summary));
-        setStatus("Coordinates copied.", false);
-      } catch (error) {
-        console.error("Could not copy coordinates:", error);
-        setStatus(error.message || "Could not copy the coordinates.", true);
-      }
-    });
-
-    csvButton.addEventListener("click", async () => {
-      try {
-        const summary = await ensureSummary();
-        downloadCsv(summary);
-        setStatus("Coordinate CSV downloaded.", false);
-      } catch (error) {
-        console.error("Could not export coordinate CSV:", error);
-        setStatus(error.message || "Could not create the coordinate CSV.", true);
-      }
-    });
   }
 
   const api = {
     buildCoordinateSummary,
-    calculateRepresentativePoint,
-    createCsv,
-    copyText
+    calculateRepresentativePoint
   };
 
   global.TonleSapCoordinates = api;

@@ -12,6 +12,7 @@
 
   let map;
   let selectedItemId = null;
+  let coordinatePanelLayoutTimer = null;
 
   const infoCard = document.getElementById("info-card");
   const infoKh = document.getElementById("info-kh");
@@ -83,14 +84,16 @@
     });
   }
 
-  function fitTonleSap() {
+  function fitTonleSap(obscuredBottom = 0) {
     const isMobile = window.innerWidth <= 640;
     const bounds = isMobile
       ? L.latLngBounds([12.15, 103.15], [13.45, 105.25])
       : lakeBounds;
+    const padding = isMobile ? 12 : 36;
 
     map.fitBounds(bounds, {
-      padding: isMobile ? [12, 12] : [36, 36],
+      paddingTopLeft: [padding, padding],
+      paddingBottomRight: [padding, padding + obscuredBottom],
       animate: false
     });
   }
@@ -249,7 +252,7 @@
     });
 
     if (window.innerWidth <= 768) {
-      closeCoordinatePanel(false);
+      closeCoordinatePanel(false, false);
       map.getContainer().focus();
     }
   }
@@ -295,15 +298,37 @@
 
   function openCoordinatePanel() {
     coordinatePanel.hidden = false;
-    coordinatePanel.setAttribute("aria-modal", window.innerWidth <= 768 ? "true" : "false");
+    coordinatePanel.setAttribute("aria-modal", "false");
     coordinateTableToggle.setAttribute("aria-expanded", "true");
+    document.body.classList.add("coordinate-panel-open");
     coordinatePanelClose.focus();
+
+    window.clearTimeout(coordinatePanelLayoutTimer);
+    coordinatePanelLayoutTimer = window.setTimeout(() => {
+      map.invalidateSize({ animate: false, pan: false });
+      const isBottomSheet = window.innerWidth > 768 && window.innerWidth <= 1024;
+      const obscuredBottom = isBottomSheet
+        ? coordinatePanel.offsetHeight
+        : 0;
+      if (window.innerWidth > 768) {
+        fitTonleSap(obscuredBottom);
+      }
+    }, 240);
   }
 
-  function closeCoordinatePanel(returnFocus = true) {
+  function closeCoordinatePanel(returnFocus = true, refitMap = true) {
     coordinatePanel.hidden = true;
     coordinateTableToggle.setAttribute("aria-expanded", "false");
+    document.body.classList.remove("coordinate-panel-open");
     if (returnFocus) coordinateTableToggle.focus();
+    window.clearTimeout(coordinatePanelLayoutTimer);
+
+    if (refitMap) {
+      coordinatePanelLayoutTimer = window.setTimeout(() => {
+        map.invalidateSize({ animate: false, pan: false });
+        fitTonleSap();
+      }, 240);
+    }
   }
 
   function setupEvents() {
@@ -324,8 +349,16 @@
 
     // Window resize maintains Tonlé Sap prominence if no item is selected
     window.addEventListener("resize", () => {
-      if (!selectedItemId) {
-        fitTonleSap();
+      map.invalidateSize({ animate: false, pan: false });
+      const panelCanShareTheMap = coordinatePanel.hidden || window.innerWidth > 768;
+      if ((!selectedItemId || !coordinatePanel.hidden) && panelCanShareTheMap) {
+        const isOpenBottomSheet = !coordinatePanel.hidden
+          && window.innerWidth > 768
+          && window.innerWidth <= 1024;
+        const obscuredBottom = isOpenBottomSheet
+          ? coordinatePanel.offsetHeight
+          : 0;
+        fitTonleSap(obscuredBottom);
       }
     });
   }

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 136" role="img" aria-labelledby="title description">
+  <title id="title">Compass rose</title>
+  <desc id="description">A compass rose indicating north, east, south, and west.</desc>
+  <g fill="none" stroke="#0f172a" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="60" cy="68" r="36" stroke-width="2.5"/>
+    <circle cx="60" cy="68" r="29" stroke-width="1" opacity="0.55"/>
+    <path d="M60 24v88M16 68h88" stroke-width="1.5" opacity="0.65"/>
+    <path d="M29 37l62 62M91 37L29 99" stroke-width="1" opacity="0.45"/>
+  </g>
+  <g stroke="#0f172a" stroke-linejoin="round">
+    <path d="M60 25L68 63 60 57 52 63Z" fill="#0f172a" stroke-width="1.5"/>
+    <path d="M60 111L52 73 60 79 68 73Z" fill="#ffffff" stroke-width="1.5"/>
+    <path d="M17 68L55 60 49 68 55 76Z" fill="#ffffff" stroke-width="1.5"/>
+    <path d="M103 68L65 76 71 68 65 60Z" fill="#0f172a" stroke-width="1.5"/>
+    <path d="M30 38L56 63 48 60 51 68Z" fill="#0f172a" stroke-width="1"/>
+    <path d="M90 98L64 73 72 76 69 68Z" fill="#0f172a" stroke-width="1"/>
+    <path d="M90 38L69 68 72 58 62 63Z" fill="#ffffff" stroke-width="1"/>
+    <path d="M30 98L51 68 48 78 58 73Z" fill="#ffffff" stroke-width="1"/>
+  </g>
+  <circle cx="60" cy="68" r="4" fill="#0d7a64" stroke="#ffffff" stroke-width="1.5"/>
+  <g fill="#0f172a" font-family="Arial, sans-serif" font-size="14" font-weight="700" text-anchor="middle">
+    <text x="60" y="14">N</text>
+    <text x="60" y="132">S</text>
+    <text x="112" y="73">E</text>
+    <text x="8" y="73">W</text>
+  </g>
+</svg>
