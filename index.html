@@ -36,16 +36,138 @@
       </div>
     </div>
 
+    <button
+      id="coordinate-table-toggle"
+      class="coordinate-table-toggle"
+      type="button"
+      aria-controls="coordinate-panel"
+      aria-expanded="false"
+    >
+      <span class="coordinate-table-icon" aria-hidden="true">▦</span>
+      <span class="coordinate-table-toggle-labels">
+        <span class="coordinate-table-toggle-kh">មើលកូអរដោនេ</span>
+        <span class="coordinate-table-toggle-en">View Coordinates</span>
+      </span>
+    </button>
+
+    <button id="kml-export-button" class="kml-export-button" type="button">
+      <span class="kml-export-icon" aria-hidden="true">↧</span>
+      <span id="kml-export-label">Export to Google Earth</span>
+    </button>
+    <p id="kml-export-status" class="kml-export-status" role="status" hidden></p>
+
+    <aside
+      id="coordinate-panel"
+      class="coordinate-panel"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="coordinate-panel-title"
+      hidden
+    >
+      <div class="coordinate-panel-header">
+        <div>
+          <h2 id="coordinate-panel-title" class="coordinate-panel-title-kh">សេចក្ដីសង្ខេបកូអរដោនេ</h2>
+          <p class="coordinate-panel-title-en">KBA &amp; PROJECT SITE COORDINATES</p>
+        </div>
+        <button
+          id="coordinate-panel-close"
+          class="coordinate-panel-close"
+          type="button"
+          aria-label="Close coordinate table"
+        >&times;</button>
+      </div>
+
+      <div class="coordinate-panel-actions">
+        <button id="copy-coordinates-button" class="coordinate-action-button" type="button" disabled>
+          Copy Coordinates
+        </button>
+        <button id="csv-export-button" class="coordinate-action-button" type="button" disabled>
+          Download CSV
+        </button>
+      </div>
+
+      <p id="coordinate-summary-status" class="coordinate-summary-status" role="status" hidden></p>
+
+      <div class="coordinate-summary-content">
+        <section class="coordinate-summary-section" aria-labelledby="kba-coordinate-title">
+          <div class="coordinate-section-heading">
+            <div>
+              <h3 id="kba-coordinate-title" class="coordinate-section-title-kh">កូអរដោនេតំបន់ស្នូល</h3>
+              <p class="coordinate-section-title-en">3 KBA / CORE AREAS</p>
+            </div>
+            <span class="coordinate-count">3</span>
+          </div>
+
+          <div class="coordinate-table-wrap">
+            <table class="coordinate-table kba-coordinate-table">
+              <caption class="visually-hidden">Representative coordinates for the 3 Tonlé Sap KBA core areas</caption>
+              <thead>
+                <tr>
+                  <th scope="col">No.</th>
+                  <th scope="col"><span class="table-heading-kh">ឈ្មោះខ្មែរ</span><span>Khmer name</span></th>
+                  <th scope="col"><span class="table-heading-kh">ឈ្មោះអង់គ្លេស</span><span>English name</span></th>
+                  <th scope="col"><span class="table-heading-kh">រយៈទទឹង</span><span>Latitude</span></th>
+                  <th scope="col"><span class="table-heading-kh">រយៈបណ្ដោយ</span><span>Longitude</span></th>
+                  <th scope="col">Method</th>
+                </tr>
+              </thead>
+              <tbody id="kba-coordinate-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="coordinate-summary-section" aria-labelledby="commune-coordinate-title">
+          <div class="coordinate-section-heading">
+            <div>
+              <h3 id="commune-coordinate-title" class="coordinate-section-title-kh">កូអរដោនេឃុំគោលដៅ</h3>
+              <p class="coordinate-section-title-en">12 COMMUNES / PROJECT SITES</p>
+            </div>
+            <span class="coordinate-count coordinate-count-sites">12</span>
+          </div>
+
+          <div class="coordinate-table-wrap">
+            <table class="coordinate-table">
+              <caption class="visually-hidden">Coordinates for the 12 Tonlé Sap project sites</caption>
+              <thead>
+                <tr>
+                  <th scope="col">No.</th>
+                  <th scope="col"><span class="table-heading-kh">ឈ្មោះខ្មែរ</span><span>Khmer name</span></th>
+                  <th scope="col"><span class="table-heading-kh">ឈ្មោះអង់គ្លេស</span><span>English name</span></th>
+                  <th scope="col"><span class="table-heading-kh">រយៈទទឹង</span><span>Latitude</span></th>
+                  <th scope="col"><span class="table-heading-kh">រយៈបណ្ដោយ</span><span>Longitude</span></th>
+                </tr>
+              </thead>
+              <tbody id="coordinate-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <p class="coordinate-panel-hint">
+        <span class="coordinate-panel-hint-kh">ចុចលើជួរដេករបស់ឃុំ ដើម្បីមើលទីតាំងនៅលើផែនទី។</span>
+        <span>Click a commune row to locate the site on the map.</span>
+      </p>
+    </aside>
+
     <main id="map" role="main" aria-label="Tonlé Sap interactive map"></main>
 
     <section id="info-card" class="info-card" aria-live="polite" hidden>
       <button id="btn-close-info" type="button" aria-label="Close" class="info-close-btn">&times;</button>
       <h2 id="info-kh" class="info-khmer"></h2>
       <p id="info-en" class="info-english"></p>
+      <a
+        id="info-coordinates"
+        class="info-coordinates"
+        href="#"
+        target="_blank"
+        rel="noopener noreferrer"
+      ></a>
     </section>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/locations.js"></script>
+    <script src="js/kml-export.js"></script>
+    <script src="js/coordinates-summary.js"></script>
     <script src="js/map.js"></script>
   </body>
 </html>

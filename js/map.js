@@ -8,6 +8,7 @@
 
   const areaLayers = new Map();
   const localPlaceMarkers = new Map();
+  const coordinateTableRows = new Map();
 
   let map;
   let selectedItemId = null;
@@ -15,7 +16,12 @@
   const infoCard = document.getElementById("info-card");
   const infoKh = document.getElementById("info-kh");
   const infoEn = document.getElementById("info-en");
+  const infoCoordinates = document.getElementById("info-coordinates");
   const btnCloseInfo = document.getElementById("btn-close-info");
+  const coordinateTableToggle = document.getElementById("coordinate-table-toggle");
+  const coordinatePanel = document.getElementById("coordinate-panel");
+  const coordinatePanelClose = document.getElementById("coordinate-panel-close");
+  const coordinateTableBody = document.getElementById("coordinate-table-body");
 
   function areaStyle(isSelected) {
     return {
@@ -104,12 +110,32 @@
       const el = marker.getElement();
       if (el) el.classList.remove("is-highlighted");
     });
+
+    coordinateTableRows.forEach((row) => {
+      row.classList.remove("is-selected");
+      row.setAttribute("aria-selected", "false");
+    });
   }
 
   function showBottomCard(item) {
     infoKh.textContent = item.nameKh;
     infoEn.textContent = item.nameEn || "";
     infoEn.hidden = !item.nameEn;
+
+    const hasCoordinates = Number.isFinite(item.lat) && Number.isFinite(item.lng);
+    infoCoordinates.hidden = !hasCoordinates;
+
+    if (hasCoordinates) {
+      const latitude = item.lat.toFixed(6);
+      const longitude = item.lng.toFixed(6);
+      infoCoordinates.textContent = `Coordinates: ${latitude}, ${longitude}`;
+      infoCoordinates.href = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      infoCoordinates.setAttribute(
+        "aria-label",
+        `Open ${item.nameEn || item.nameKh} coordinates in Google Maps`
+      );
+    }
+
     infoCard.hidden = false;
   }
 
@@ -139,6 +165,12 @@
       marker.bringToFront();
       const el = marker.getElement();
       if (el) el.classList.add("is-highlighted");
+    }
+
+    const tableRow = coordinateTableRows.get(place.id);
+    if (tableRow) {
+      tableRow.classList.add("is-selected");
+      tableRow.setAttribute("aria-selected", "true");
     }
 
     showBottomCard(place);
@@ -200,12 +232,93 @@
     });
   }
 
+  function addTableCell(row, value, className) {
+    const cell = document.createElement("td");
+    cell.textContent = value;
+    if (className) cell.className = className;
+    row.appendChild(cell);
+    return cell;
+  }
+
+  function selectSiteFromTable(place) {
+    selectCommune(place);
+    map.flyTo([place.lat, place.lng], Math.max(map.getZoom(), 10), {
+      animate: true,
+      duration: 0.6
+    });
+
+    if (window.innerWidth <= 768) {
+      closeCoordinatePanel(false);
+      map.getContainer().focus();
+    }
+  }
+
+  function renderCoordinateTable() {
+    localPlaces.forEach((place, index) => {
+      const row = document.createElement("tr");
+      row.tabIndex = 0;
+      row.setAttribute("aria-selected", "false");
+      row.setAttribute("aria-label", `${place.nameEn}, ${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}`);
+
+      addTableCell(row, String(index + 1), "coordinate-index");
+      addTableCell(row, place.nameKh, "coordinate-name-kh");
+      addTableCell(row, place.nameEn || "—", "coordinate-name-en");
+      addTableCell(row, place.lat.toFixed(6), "coordinate-number");
+
+      const longitudeCell = document.createElement("td");
+      longitudeCell.className = "coordinate-number";
+      const googleMapsLink = document.createElement("a");
+      googleMapsLink.className = "coordinate-map-link";
+      googleMapsLink.href = `https://www.google.com/maps?q=${place.lat.toFixed(6)},${place.lng.toFixed(6)}`;
+      googleMapsLink.target = "_blank";
+      googleMapsLink.rel = "noopener noreferrer";
+      googleMapsLink.textContent = `${place.lng.toFixed(6)} ↗`;
+      googleMapsLink.setAttribute("aria-label", `Open ${place.nameEn || place.nameKh} in Google Maps`);
+      googleMapsLink.addEventListener("click", (event) => event.stopPropagation());
+      longitudeCell.appendChild(googleMapsLink);
+      row.appendChild(longitudeCell);
+
+      row.addEventListener("click", () => selectSiteFromTable(place));
+      row.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          selectSiteFromTable(place);
+        }
+      });
+
+      coordinateTableBody.appendChild(row);
+      coordinateTableRows.set(place.id, row);
+    });
+  }
+
+  function openCoordinatePanel() {
+    coordinatePanel.hidden = false;
+    coordinatePanel.setAttribute("aria-modal", window.innerWidth <= 768 ? "true" : "false");
+    coordinateTableToggle.setAttribute("aria-expanded", "true");
+    coordinatePanelClose.focus();
+  }
+
+  function closeCoordinatePanel(returnFocus = true) {
+    coordinatePanel.hidden = true;
+    coordinateTableToggle.setAttribute("aria-expanded", "false");
+    if (returnFocus) coordinateTableToggle.focus();
+  }
+
   function setupEvents() {
     if (btnCloseInfo) {
       btnCloseInfo.addEventListener("click", () => {
         clearSelection();
       });
     }
+
+    coordinateTableToggle.addEventListener("click", openCoordinatePanel);
+    coordinatePanelClose.addEventListener("click", () => closeCoordinatePanel());
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !coordinatePanel.hidden) {
+        closeCoordinatePanel();
+      }
+    });
 
     // Window resize maintains Tonlé Sap prominence if no item is selected
     window.addEventListener("resize", () => {
@@ -219,6 +332,7 @@
     initializeMap();
     renderImportantAreas();
     renderLocalPlaces();
+    renderCoordinateTable();
     setupEvents();
   }
 
