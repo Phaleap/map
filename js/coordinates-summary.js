@@ -396,34 +396,50 @@
     if (!copied) throw new Error("Copying coordinates is not supported by this browser.");
   }
 
-  function addCell(row, value, className) {
+  function addCell(row, value, className, label) {
     const cell = document.createElement("td");
     cell.textContent = value;
     if (className) cell.className = className;
+    if (label) cell.dataset.label = label;
     row.appendChild(cell);
   }
 
-  function renderKbaTable(kbaAreas, tableBody) {
+  function renderKbaTable(kbaAreas, tableBody, methodList) {
     tableBody.textContent = "";
+    methodList.textContent = "";
     kbaAreas.forEach((area, index) => {
       const row = document.createElement("tr");
-      addCell(row, String(index + 1), "coordinate-index");
-      addCell(row, area.nameKh, "coordinate-name-kh");
-      addCell(row, area.nameEn, "coordinate-name-en");
-      addCell(row, area.lat.toFixed(6), "coordinate-number");
-      addCell(row, area.lng.toFixed(6), "coordinate-number");
-      addCell(row, area.method, "coordinate-method");
+      addCell(row, String(index + 1), "coordinate-index", "No.");
+      addCell(row, area.nameKh, "coordinate-name-kh", "Khmer");
+      addCell(row, area.nameEn, "coordinate-name-en", "English");
+      addCell(row, area.lat.toFixed(6), "coordinate-number", "Latitude");
+      addCell(row, area.lng.toFixed(6), "coordinate-number", "Longitude");
       tableBody.appendChild(row);
+
+      const methodItem = document.createElement("li");
+      const areaName = document.createElement("strong");
+      areaName.textContent = `${area.nameEn}: `;
+      methodItem.appendChild(areaName);
+      methodItem.appendChild(document.createTextNode(area.method));
+      methodList.appendChild(methodItem);
     });
   }
 
   function setupCoordinateSummaryUi() {
     const panelToggle = document.getElementById("coordinate-table-toggle");
     const kbaTableBody = document.getElementById("kba-coordinate-table-body");
+    const kbaMethodList = document.getElementById("kba-coordinate-methods");
     const copyButton = document.getElementById("copy-coordinates-button");
     const csvButton = document.getElementById("csv-export-button");
     const status = document.getElementById("coordinate-summary-status");
-    if (!panelToggle || !kbaTableBody || !copyButton || !csvButton || !status) return;
+    const communeTab = document.getElementById("commune-coordinates-tab");
+    const kbaTab = document.getElementById("kba-coordinates-tab");
+    const communePanel = document.getElementById("commune-coordinates-panel");
+    const kbaPanel = document.getElementById("kba-coordinates-panel");
+    if (
+      !panelToggle || !kbaTableBody || !kbaMethodList || !copyButton || !csvButton ||
+      !status || !communeTab || !kbaTab || !communePanel || !kbaPanel
+    ) return;
 
     let summaryPromise = null;
     let currentSummary = null;
@@ -434,6 +450,18 @@
       status.classList.toggle("is-error", Boolean(isError));
     }
 
+    function activateTab(activeTab, activePanel, inactiveTab, inactivePanel) {
+      activeTab.classList.add("is-active");
+      activeTab.setAttribute("aria-selected", "true");
+      activeTab.tabIndex = 0;
+      activePanel.hidden = false;
+      inactiveTab.classList.remove("is-active");
+      inactiveTab.setAttribute("aria-selected", "false");
+      inactiveTab.tabIndex = -1;
+      inactivePanel.hidden = true;
+      activeTab.focus();
+    }
+
     async function ensureSummary() {
       if (currentSummary) return currentSummary;
       if (!summaryPromise) {
@@ -441,7 +469,7 @@
         summaryPromise = buildCoordinateSummary(localPlaces, importantAreas, fetch)
           .then((summary) => {
             currentSummary = summary;
-            renderKbaTable(summary.kbaAreas, kbaTableBody);
+            renderKbaTable(summary.kbaAreas, kbaTableBody, kbaMethodList);
             copyButton.disabled = false;
             csvButton.disabled = false;
             setStatus("", false);
@@ -459,6 +487,28 @@
 
     panelToggle.addEventListener("click", () => {
       ensureSummary().catch(() => {});
+    });
+
+    communeTab.addEventListener("click", () => {
+      activateTab(communeTab, communePanel, kbaTab, kbaPanel);
+    });
+
+    kbaTab.addEventListener("click", () => {
+      activateTab(kbaTab, kbaPanel, communeTab, communePanel);
+    });
+
+    [communeTab, kbaTab].forEach((tab) => {
+      tab.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        const showKba = event.key === "End"
+          || ((event.key === "ArrowLeft" || event.key === "ArrowRight") && tab === communeTab);
+        if (showKba) {
+          activateTab(kbaTab, kbaPanel, communeTab, communePanel);
+        } else {
+          activateTab(communeTab, communePanel, kbaTab, kbaPanel);
+        }
+      });
     });
 
     copyButton.addEventListener("click", async () => {

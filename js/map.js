@@ -232,10 +232,11 @@
     });
   }
 
-  function addTableCell(row, value, className) {
+  function addTableCell(row, value, className, label) {
     const cell = document.createElement("td");
     cell.textContent = value;
     if (className) cell.className = className;
+    if (label) cell.dataset.label = label;
     row.appendChild(cell);
     return cell;
   }
@@ -260,13 +261,14 @@
       row.setAttribute("aria-selected", "false");
       row.setAttribute("aria-label", `${place.nameEn}, ${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}`);
 
-      addTableCell(row, String(index + 1), "coordinate-index");
-      addTableCell(row, place.nameKh, "coordinate-name-kh");
-      addTableCell(row, place.nameEn || "—", "coordinate-name-en");
-      addTableCell(row, place.lat.toFixed(6), "coordinate-number");
+      addTableCell(row, String(index + 1), "coordinate-index", "No.");
+      addTableCell(row, place.nameKh, "coordinate-name-kh", "Khmer");
+      addTableCell(row, place.nameEn || "—", "coordinate-name-en", "English");
+      addTableCell(row, place.lat.toFixed(6), "coordinate-number", "Latitude");
 
       const longitudeCell = document.createElement("td");
       longitudeCell.className = "coordinate-number";
+      longitudeCell.dataset.label = "Longitude";
       const googleMapsLink = document.createElement("a");
       googleMapsLink.className = "coordinate-map-link";
       googleMapsLink.href = `https://www.google.com/maps?q=${place.lat.toFixed(6)},${place.lng.toFixed(6)}`;

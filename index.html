@@ -88,35 +88,39 @@
 
       <p id="coordinate-summary-status" class="coordinate-summary-status" role="status" hidden></p>
 
+      <div class="coordinate-tabs" role="tablist" aria-label="Coordinate sections">
+        <button
+          id="commune-coordinates-tab"
+          class="coordinate-tab is-active"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="commune-coordinates-panel"
+        >
+          <span class="coordinate-tab-kh">ឃុំគោលដៅ</span>
+          <span>12 Communes</span>
+        </button>
+        <button
+          id="kba-coordinates-tab"
+          class="coordinate-tab"
+          type="button"
+          role="tab"
+          tabindex="-1"
+          aria-selected="false"
+          aria-controls="kba-coordinates-panel"
+        >
+          <span class="coordinate-tab-kh">តំបន់ស្នូល</span>
+          <span>3 KBA Areas</span>
+        </button>
+      </div>
+
       <div class="coordinate-summary-content">
-        <section class="coordinate-summary-section" aria-labelledby="kba-coordinate-title">
-          <div class="coordinate-section-heading">
-            <div>
-              <h3 id="kba-coordinate-title" class="coordinate-section-title-kh">កូអរដោនេតំបន់ស្នូល</h3>
-              <p class="coordinate-section-title-en">3 KBA / CORE AREAS</p>
-            </div>
-            <span class="coordinate-count">3</span>
-          </div>
-
-          <div class="coordinate-table-wrap">
-            <table class="coordinate-table kba-coordinate-table">
-              <caption class="visually-hidden">Representative coordinates for the 3 Tonlé Sap KBA core areas</caption>
-              <thead>
-                <tr>
-                  <th scope="col">No.</th>
-                  <th scope="col"><span class="table-heading-kh">ឈ្មោះខ្មែរ</span><span>Khmer name</span></th>
-                  <th scope="col"><span class="table-heading-kh">ឈ្មោះអង់គ្លេស</span><span>English name</span></th>
-                  <th scope="col"><span class="table-heading-kh">រយៈទទឹង</span><span>Latitude</span></th>
-                  <th scope="col"><span class="table-heading-kh">រយៈបណ្ដោយ</span><span>Longitude</span></th>
-                  <th scope="col">Method</th>
-                </tr>
-              </thead>
-              <tbody id="kba-coordinate-table-body"></tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="coordinate-summary-section" aria-labelledby="commune-coordinate-title">
+        <section
+          id="commune-coordinates-panel"
+          class="coordinate-summary-section"
+          role="tabpanel"
+          aria-labelledby="commune-coordinates-tab"
+        >
           <div class="coordinate-section-heading">
             <div>
               <h3 id="commune-coordinate-title" class="coordinate-section-title-kh">កូអរដោនេឃុំគោលដៅ</h3>
@@ -139,6 +143,43 @@
               </thead>
               <tbody id="coordinate-table-body"></tbody>
             </table>
+          </div>
+        </section>
+
+        <section
+          id="kba-coordinates-panel"
+          class="coordinate-summary-section"
+          role="tabpanel"
+          aria-labelledby="kba-coordinates-tab"
+          hidden
+        >
+          <div class="coordinate-section-heading">
+            <div>
+              <h3 id="kba-coordinate-title" class="coordinate-section-title-kh">កូអរដោនេតំបន់ស្នូល</h3>
+              <p class="coordinate-section-title-en">3 KBA / CORE AREAS</p>
+            </div>
+            <span class="coordinate-count">3</span>
+          </div>
+
+          <div class="coordinate-table-wrap">
+            <table class="coordinate-table kba-coordinate-table">
+              <caption class="visually-hidden">Representative coordinates for the 3 Tonlé Sap KBA core areas</caption>
+              <thead>
+                <tr>
+                  <th scope="col">No.</th>
+                  <th scope="col"><span class="table-heading-kh">ឈ្មោះខ្មែរ</span><span>Khmer name</span></th>
+                  <th scope="col"><span class="table-heading-kh">ឈ្មោះអង់គ្លេស</span><span>English name</span></th>
+                  <th scope="col"><span class="table-heading-kh">រយៈទទឹង</span><span>Latitude</span></th>
+                  <th scope="col"><span class="table-heading-kh">រយៈបណ្ដោយ</span><span>Longitude</span></th>
+                </tr>
+              </thead>
+              <tbody id="kba-coordinate-table-body"></tbody>
+            </table>
+          </div>
+
+          <div class="coordinate-method-note">
+            <strong>Representative-point method</strong>
+            <ul id="kba-coordinate-methods"></ul>
           </div>
         </section>
       </div>
